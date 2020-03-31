@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"compress/gzip"
+	"encoding/json"
 	"io/ioutil"
 	"log"
 	"os"
@@ -11,29 +12,51 @@ import (
 	"time"
 )
 
+// Configuration struct
+type Configuration struct {
+	UUID    string `json:"uuid"`
+	LogDir  string `json:"logDir"`
+	LogName string `json:"logName"`
+}
+
 func main() {
-	// Gets current timezone
+	conf := loadConf()
+
+	// Gets current timezone offset
 	t := time.Now()
-	zone, offset := t.Zone()
+	_, offset := t.Zone()
 
-	logFolder := "/var/log/"
-	logName := "fail2ban"
+	println(offset)
+	processBans(conf.LogDir, conf.LogName)
+}
 
-	println(zone, offset)
-	processBans(logFolder, logName)
+// Load config file
+func loadConf() Configuration {
+	bytes, err := ioutil.ReadFile("/etc/failstats.conf")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var conf Configuration
+	err = json.Unmarshal(bytes, &conf)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return conf
 }
 
 // Processes the fail2ban logs, parses out all the new bans after a given datetime
-func processBans(logFolder string, logName string) {
+func processBans(logDir string, logName string) {
 	// Finds log files
-	logFiles := findLogFiles(logFolder, logName)
+	logFiles := findLogFiles(logDir, logName)
 
 	var scanner *bufio.Scanner
 	re := regexp.MustCompile(`(?i)(\d+-\d+-\d+ \d+:\d+:\d+,\d+)\sfail2ban.actions\W+.*\WBan (.*)`)
 
 	// Parses the files
 	for _, file := range logFiles {
-		logFile, err := os.Open(logFolder + file)
+		logFile, err := os.Open(logDir + file)
 
 		if err != nil {
 			log.Fatal(err)
@@ -70,9 +93,10 @@ func processBans(logFolder string, logName string) {
 }
 
 // Finds the log files, errors out if failed. Returns a list of matching fileinfos
-func findLogFiles(logFolder string, logName string) []string {
-	files, err := ioutil.ReadDir(logFolder)
+func findLogFiles(logDir string, logName string) []string {
+	files, err := ioutil.ReadDir(logDir)
 	if err != nil {
+		log.Println("Failed to find log directory: " + logDir)
 		log.Fatal(err)
 	}
 

@@ -15,16 +15,19 @@ func main() {
 	// Gets current timezone
 	t := time.Now()
 	zone, offset := t.Zone()
-	logFolder := "./"
+
+	logFolder := "/var/log/"
+	logName := "fail2ban"
 
 	println(zone, offset)
-	processBans(logFolder)
+	processBans(logFolder, logName)
 }
 
 // Processes the fail2ban logs, parses out all the new bans after a given datetime
-func processBans(logFolder string) {
+func processBans(logFolder string, logName string) {
 	// Finds log files
-	logFiles := findLogFiles(logFolder)
+	logFiles := findLogFiles(logFolder, logName)
+
 	var scanner *bufio.Scanner
 	re := regexp.MustCompile(`(?i)(\d+-\d+-\d+ \d+:\d+:\d+,\d+)\sfail2ban.actions\W+.*\WBan (.*)`)
 
@@ -67,13 +70,13 @@ func processBans(logFolder string) {
 }
 
 // Finds the log files, errors out if failed. Returns a list of matching fileinfos
-func findLogFiles(logFolder string) []string {
+func findLogFiles(logFolder string, logName string) []string {
 	files, err := ioutil.ReadDir(logFolder)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	re := regexp.MustCompile(`fail2ban`)
+	re := regexp.MustCompile(logName)
 	var logFiles []string
 	logRotate := "normal"
 

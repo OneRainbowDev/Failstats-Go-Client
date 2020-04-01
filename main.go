@@ -22,19 +22,7 @@ type Configuration struct {
 func main() {
 	conf := loadConf()
 
-	// Gets last run
-
-	// Gets current timezone offset
-	t := time.Now()
-	_, offset := t.Zone()
-
-	lastRunTime := lastRun()
-
-	println(offset)
 	processBans(conf.LogDir, conf.LogName)
-	println(lastRunTime.Format(time.RFC3339))
-
-	saveRun(lastRunTime)
 }
 
 // Load config file
@@ -58,10 +46,20 @@ func processBans(logDir string, logName string) {
 	// Finds log files
 	logFiles := findLogFiles(logDir, logName)
 
-	var scanner *bufio.Scanner
-	re := regexp.MustCompile(`(?i)(\d+-\d+-\d+ \d+:\d+:\d+,\d+)\sfail2ban.actions\W+.*\WBan (.*)`)
+	// Gets last run
+	lastRunTime := lastRun()
 
-	// Parses the files
+	// Gets current timezone offset
+	t := time.Now()
+	_, offset := t.Zone()
+
+	var scanner *bufio.Scanner
+	var banDates []string
+	var banIPs []string
+	re := regexp.MustCompile(`(?i)(\d+-\d+-\d+ \d+:\d+:\d+,\d+)\sfail2ban.actions\W+.*\WBan (.*)`)
+	current := lastRunTime
+
+	// Parses the file into the above variables
 	for _, file := range logFiles {
 		logFile, err := os.Open(logDir + file)
 
@@ -88,15 +86,43 @@ func processBans(logDir string, logName string) {
 		}
 
 		// Reads through text file
+		lastFile := false
 		for scanner.Scan() {
 			matches := re.FindSubmatch([]byte(scanner.Text()))
 
 			if matches != nil {
+				dateStr := strings.Replace(string(matches[1]), ",", ".", -1)
+				date, err := time.Parse("2006-01-02 15:04:05.000", dateStr)
 
-				println(string(matches[1]), string(matches[2]))
+				if err != nil {
+					log.Println("Failed to parse date.")
+					log.Fatal(err)
+				}
+
+				if date.After(lastRunTime) {
+					// Converts to UTC time
+					utcDate := date.Add(time.Duration(-offset) * time.Second)
+
+					banDates = append(banDates, utcDate.Format("2006-01-02 15:04:05")+" UTC+0000")
+					banIPs = append(banIPs, string(matches[2]))
+				} else {
+					// Has to complete the file
+					lastFile = true
+				}
+
+				if date.After(current) {
+					current = date
+				}
 			}
 		}
+
+		if lastFile {
+			break
+		}
 	}
+
+	// Saves the last run
+	saveRun(lastRunTime)
 }
 
 // Finds the log files, errors out if failed. Returns a list of matching fileinfos

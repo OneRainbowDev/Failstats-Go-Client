@@ -22,12 +22,19 @@ type Configuration struct {
 func main() {
 	conf := loadConf()
 
+	// Gets last run
+
 	// Gets current timezone offset
 	t := time.Now()
 	_, offset := t.Zone()
 
+	lastRunTime := lastRun()
+
 	println(offset)
 	processBans(conf.LogDir, conf.LogName)
+	println(lastRunTime.Format(time.RFC3339))
+
+	saveRun(lastRunTime)
 }
 
 // Load config file
@@ -142,4 +149,55 @@ func reverseStrSlice(data []string) []string {
 	}
 
 	return reversedStr
+}
+
+// Gets the last runtime from \var\lib\failstats
+func lastRun() time.Time {
+	// Checks if file exists
+	_, err := os.Stat("/var/lib/failstats")
+
+	if err != nil {
+		if os.IsNotExist(err) {
+			return time.Date(1, 1, 1, 1, 1, 1, 1, time.UTC)
+		}
+		log.Println("Unable to access /var/lib/failstats")
+		log.Fatal(err)
+	}
+
+	timeFile, err := os.Open("/var/lib/failstats")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer timeFile.Close()
+
+	scanner := bufio.NewScanner(timeFile)
+
+	scanner.Scan()
+
+	timeStr := scanner.Text()
+	lastR, err := time.Parse(time.RFC3339, timeStr)
+
+	if err != nil {
+		log.Println("Unable to parse last run time from /var/lib/failstats")
+		log.Fatal(err)
+	}
+
+	return lastR
+}
+
+// Saves the last runtime to \var\lib\failstats, creating file if it doesn't exist
+func saveRun(timeStr time.Time) {
+	timeString := timeStr.Format(time.RFC3339)
+
+	// Read Write Mode
+	file, err := os.Create("/var/lib/failstats")
+
+	if err != nil {
+		log.Println("Failed to save last runtime to /var/lib/failstats")
+		log.Fatal(err)
+	}
+
+	defer file.Close()
+
+	file.WriteString(timeString)
 }

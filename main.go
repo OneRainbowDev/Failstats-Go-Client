@@ -2,10 +2,14 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"compress/gzip"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"log"
+	"mime/multipart"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
@@ -22,7 +26,7 @@ type Configuration struct {
 func main() {
 	conf := loadConf()
 
-	processBans(conf.LogDir, conf.LogName)
+	processBans(conf.LogDir, conf.LogName, conf.UUID)
 }
 
 // Load config file
@@ -42,7 +46,7 @@ func loadConf() Configuration {
 }
 
 // Processes the fail2ban logs, parses out all the new bans after a given datetime
-func processBans(logDir string, logName string) {
+func processBans(logDir string, logName string, uuid string) {
 	// Finds log files
 	logFiles := findLogFiles(logDir, logName)
 
@@ -119,6 +123,105 @@ func processBans(logDir string, logName string) {
 		if lastFile {
 			break
 		}
+	}
+
+	// Puts data into one var
+	var data [][]string
+	for i := 0; i <= len(banDates)-1; i++ {
+		data = append(data, []string{banDates[i], banIPs[i]})
+	}
+
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		log.Println("Failed to create json")
+		log.Fatal(err)
+	}
+
+	// Saves to gzip file
+	file, err := ioutil.TempFile("/tmp/", "data.json.gz")
+
+	if err != nil {
+		log.Println("Failed to make json gzip")
+		log.Fatal(err)
+	}
+
+	defer file.Close()
+
+	gzipFile := gzip.NewWriter(file)
+	_, err = gzipFile.Write(jsonData)
+
+	if err != nil {
+		log.Println("Failed to write json to file")
+		log.Fatal(err)
+		os.Remove(file.Name())
+	}
+
+	gzipFile.Close()
+
+	// Creates the post data manually since there is no convenient function
+	buf := new(bytes.Buffer)
+	writer := multipart.NewWriter(buf)
+
+	// POST ID data
+	id, err := writer.CreateFormField("id")
+
+	if err != nil {
+		log.Println("Failed create post request")
+		log.Fatal(err)
+		os.Remove(file.Name())
+	}
+
+	id.Write([]byte(uuid))
+
+	// Adds GZIP file
+	fileData, err := writer.CreateFormFile("data", "data.json.gz")
+
+	if err != nil {
+		log.Println("Failed create post request")
+		log.Fatal(err)
+		os.Remove(file.Name())
+	}
+
+	_, err = io.Copy(fileData, file)
+
+	if err != nil {
+		log.Println("Failed create post request")
+		log.Fatal(err)
+		os.Remove(file.Name())
+	}
+
+	// Terminating boundary
+	writer.Close()
+
+	// Creates the request
+	request, err := http.NewRequest("POST", "https://failstats.net/api/", buf)
+
+	if err != nil {
+		log.Println("Failed create post request")
+		log.Fatal(err)
+		os.Remove(file.Name())
+	}
+
+	request.Header.Set("Content-Type", writer.FormDataContentType())
+
+	// Deletes temp file
+	os.Remove(file.Name())
+
+	// Does the request and checks
+	client := new(http.Client)
+	result, err := client.Do(request)
+
+	if err != nil {
+		log.Println("Failed to connect to server")
+		return
+	}
+
+	scanner = bufio.NewScanner(result.Body)
+	scanner.Scan()
+
+	if scanner.Text() != "1" {
+		log.Println("Failed to transfer data")
+		return
 	}
 
 	// Saves the last run

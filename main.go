@@ -145,8 +145,6 @@ func processBans(logDir string, logName string, uuid string) {
 		log.Fatal(err)
 	}
 
-	defer file.Close()
-
 	gzipFile := gzip.NewWriter(file)
 	_, err = gzipFile.Write(jsonData)
 
@@ -157,6 +155,9 @@ func processBans(logDir string, logName string, uuid string) {
 	}
 
 	gzipFile.Close()
+
+	// Flushes gzip data to disk
+	file.Close()
 
 	// Creates the post data manually since there is no convenient function
 	buf := new(bytes.Buffer)
@@ -182,6 +183,15 @@ func processBans(logDir string, logName string, uuid string) {
 		os.Remove(file.Name())
 	}
 
+	// Reopens data.json.gz
+	fileLocation := file.Name()
+	file, err = os.Open(fileLocation)
+	if err != nil {
+		log.Println("Failed create post request")
+		log.Fatal(err)
+		os.Remove(fileLocation)
+	}
+
 	_, err = io.Copy(fileData, file)
 
 	if err != nil {
@@ -192,6 +202,7 @@ func processBans(logDir string, logName string, uuid string) {
 
 	// Terminating boundary
 	writer.Close()
+	os.Remove(file.Name())
 
 	// Creates the request
 	request, err := http.NewRequest("POST", "https://failstats.net/api/", buf)
@@ -199,7 +210,6 @@ func processBans(logDir string, logName string, uuid string) {
 	if err != nil {
 		log.Println("Failed create post request")
 		log.Fatal(err)
-		os.Remove(file.Name())
 	}
 
 	request.Header.Set("Content-Type", writer.FormDataContentType())

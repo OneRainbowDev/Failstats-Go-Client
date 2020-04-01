@@ -235,7 +235,7 @@ func processBans(logDir string, logName string, uuid string) {
 	}
 
 	// Saves the last run
-	saveRun(lastRunTime)
+	saveRun(current)
 }
 
 // Finds the log files, errors out if failed. Returns a list of matching fileinfos

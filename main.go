@@ -21,12 +21,16 @@ type Configuration struct {
 	UUID    string `json:"uuid"`
 	LogDir  string `json:"logDir"`
 	LogName string `json:"logName"`
+	RepRate int    `json:"repRateSeconds"`
 }
 
 func main() {
 	conf := loadConf()
 
-	processBans(conf.LogDir, conf.LogName, conf.UUID)
+	// Loops forever, should use negligible resources
+	for range time.NewTicker(time.Duration(conf.RepRate) * time.Second).C {
+		processBans(conf.LogDir, conf.LogName, conf.UUID)
+	}
 }
 
 // Load config file

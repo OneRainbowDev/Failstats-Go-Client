@@ -103,6 +103,11 @@ func processBans(logDir string, logName string, uuid string) {
 					log.Fatal(err)
 				}
 
+				// Its late and date.equals doesn't seem to work, even if I set the locations to be the same
+				if lastRunTime.Format("2006-01-02 15:04:05") == date.Format("2006-01-02 15:04:05") {
+					continue
+				}
+
 				if date.After(lastRunTime) {
 					// Converts to UTC time
 					utcDate := date.Add(time.Duration(-offset) * time.Second)
@@ -123,6 +128,11 @@ func processBans(logDir string, logName string, uuid string) {
 		if lastFile {
 			break
 		}
+	}
+
+	// Checks if there is data to send, returns otherwise
+	if len(banIPs) == 0 {
+		return
 	}
 
 	// Puts data into one var

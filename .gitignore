@@ -12,6 +12,7 @@
 *.out
 
 *fail2ban*.log
+*failban.conf
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
@@ -22,3 +23,4 @@
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+.gitignore

@@ -24,3 +24,5 @@
 !.vscode/launch.json
 !.vscode/extensions.json
 .gitignore
+
+golang-failstats

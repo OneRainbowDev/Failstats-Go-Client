@@ -12,15 +12,15 @@ stages:
 test:
   stage: test
   script:
-    - go fmt
-    - go test
-    - go vet
-    - go test --race
+    - go fmt $REPO_NAME
+    - go test $REPO_NAME
+    - go vet $REPO_NAME
+    - go test --race $REPO_NAME
   
 build:
   stage: build
   script:
-    - go build -o failstats
+    - go build $REPO_NAME -o failstats
   artifacts:
     when: on_success
     name: "$CI_JOB_NAME"

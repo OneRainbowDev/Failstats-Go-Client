@@ -12,10 +12,10 @@ stages:
 test:
   stage: test
   script:
-    - go fmt $REPO_NAME
-    - go test $REPO_NAME
-    - go vet $REPO_NAME
-    - go test --race $REPO_NAME
+    - go fmt $(go list ./... | grep -v /vendor/)
+    - go test $(go list ./... | grep -v /vendor/)
+    - go vet $(go list ./... | grep -v /vendor/)
+    - go test --race $(go list ./... | grep -v /vendor/)
   
 build:
   stage: build

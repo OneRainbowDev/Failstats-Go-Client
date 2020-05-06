@@ -27,6 +27,8 @@ type Configuration struct {
 func main() {
 	conf := loadConf()
 
+	log.Println("Loaded settings")
+
 	// Loops forever, should use negligible resources
 	for range time.NewTicker(time.Duration(conf.RepRate) * time.Second).C {
 		processBans(conf.LogDir, conf.LogName, conf.UUID)
@@ -136,6 +138,7 @@ func processBans(logDir string, logName string, uuid string) {
 
 	// Checks if there is data to send, returns otherwise
 	if len(banIPs) == 0 {
+		log.Println("0 bans proccessed")
 		return
 	}
 
@@ -250,6 +253,7 @@ func processBans(logDir string, logName string, uuid string) {
 
 	// Saves the last run
 	saveRun(current)
+	log.Println("%x bans proccessed", len(banIPs))
 }
 
 // Finds the log files, errors out if failed. Returns a list of matching fileinfos

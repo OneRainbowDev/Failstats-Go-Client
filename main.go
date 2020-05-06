@@ -253,7 +253,7 @@ func processBans(logDir string, logName string, uuid string) {
 
 	// Saves the last run
 	saveRun(current)
-	log.Println("%x bans proccessed", len(banIPs))
+	log.Println(len(banIPs), "bans proccessed")
 }
 
 // Finds the log files, errors out if failed. Returns a list of matching fileinfos

@@ -17,9 +17,8 @@ test:
   stage: test
   script:
     - go fmt 
-    - go test 
     - go vet 
-    - go test --race 
+    - go test -race -cover
   
 build:
   stage: build

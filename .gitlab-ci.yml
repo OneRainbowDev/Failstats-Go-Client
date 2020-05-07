@@ -1,6 +1,8 @@
 image: golang:latest
 
 before_script:
+  - mkdir builds
+  - mkdir builds/linux
   - mkdir builds/linux/amd64
   - mkdir builds/linux/386
   - mkdir builds/linux/arm

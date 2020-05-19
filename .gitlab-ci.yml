@@ -37,8 +37,6 @@ build:
 nfpm:
   stage: package
   script: 
-    - apt upgrade
-    - apt install git
     - git clone https://github.com/goreleaser/nfpm.git nfpm
     - cd nfpm && go test
     - go build nfpm/cmd/nfpm nfpm

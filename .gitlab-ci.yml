@@ -38,5 +38,5 @@ nfpm:
   script: 
     - git clone https://github.com/goreleaser/nfpm.git nfpm
     - cd nfpm && go test
-    - go build -o nfpm/cmd/nfpm nfpm
+    - go build -o nfpm nfpm/cmd/nfpm/main.go
     - ./nfpm

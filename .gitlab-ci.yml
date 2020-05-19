@@ -36,7 +36,7 @@ build:
 nfpm:
   stage: package
   script: 
-    - git clone https://github.com/goreleaser/nfpm.git nfpm
+    - git clone https://github.com/goreleaser/nfpm.git /usr/local/go/src/nfpm/
     - cd nfpm && go test
     - go build -o nfpm nfpm/cmd/nfpm/main.go
     - ./nfpm

@@ -1,14 +1,5 @@
 image: golang:latest
 
-before_script:
-  - mkdir builds
-  - mkdir builds/linux
-  - mkdir builds/linux/amd64
-  - mkdir builds/linux/386
-  - mkdir builds/linux/arm
-  - mkdir builds/linux/arm64
-  - go get github.com/gofrs/uuid
-
 stages: 
   - test
   - build
@@ -17,6 +8,7 @@ stages:
 test:
   stage: test
   script:
+    - go get github.com/gofrs/uuid
     - go fmt 
     - go vet 
     - go test -race -cover
@@ -24,6 +16,13 @@ test:
 build:
   stage: build
   script:
+    - mkdir builds
+    - mkdir builds/linux
+    - mkdir builds/linux/amd64
+    - mkdir builds/linux/386
+    - mkdir builds/linux/arm
+    - mkdir builds/linux/arm64
+    - go get github.com/gofrs/uuid
     - GOOS=linux GOARCH=amd64 go build $REPO_NAME -o builds/linux/amd64/failstats
     - GOOS=linux GOARCH=386 go build $REPO_NAME -o builds/linux/386/failstats
     - GOOS=linux GOARCH=arm go build $REPO_NAME -o builds/linux/arm/failstats

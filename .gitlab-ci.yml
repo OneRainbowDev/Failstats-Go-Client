@@ -12,6 +12,7 @@ before_script:
 stages: 
   - test
   - build
+  - package
 
 test:
   stage: test
@@ -34,7 +35,7 @@ build:
       - builds
 
 nfpm:
-  stage: build
+  stage: package
   script: 
     - apt upgrade
     - apt install git

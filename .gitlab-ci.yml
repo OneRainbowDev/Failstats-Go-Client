@@ -32,3 +32,13 @@ build:
     name: "$CI_JOB_NAME"
     paths:
       - builds
+
+nfpm:
+  stage: build
+  script: 
+    - apt upgrade
+    - apt install git
+    - git clone https://github.com/goreleaser/nfpm.git nfpm
+    - go test nfpm
+    - go build nfpm/cmd/nfpm nfpm
+    - ./nfpm

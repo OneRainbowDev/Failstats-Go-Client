@@ -1,0 +1,21 @@
+# nfpm example config file
+name: "failstats"
+arch: "{arch}"
+platform: "linux"
+version: "{version}"
+section: "default"
+priority: "extra"
+replaces:
+- failstats
+provides:
+- failstats
+maintainer: "EngieDev admin@engiedev.net"
+description:  Reports fail2ban statistics to failstats.net
+vendor: "EngieDev"
+homepage: "https://failstats.net"
+license: "MIT"
+bindir: "/usr/local/bin"
+files:
+  ./builds/linux/{arch}/failstats: "/usr/local/bin/failstats"
+config_files:
+  ./failstats.conf: "/etc/failstats.conf"

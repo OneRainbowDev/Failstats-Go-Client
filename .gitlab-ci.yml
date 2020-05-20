@@ -1,21 +1,15 @@
 image: golang:latest
 
-before_script:
-  - mkdir builds
-  - mkdir builds/linux
-  - mkdir builds/linux/amd64
-  - mkdir builds/linux/386
-  - mkdir builds/linux/arm
-  - mkdir builds/linux/arm64
-  - go get github.com/gofrs/uuid
-
 stages: 
   - test
   - build
+  - build_nfpm
+  - package
 
 test:
   stage: test
   script:
+    - go get github.com/gofrs/uuid
     - go fmt 
     - go vet 
     - go test -race -cover
@@ -23,8 +17,17 @@ test:
 build:
   stage: build
   script:
+    - mkdir builds
+    - mkdir builds/linux
+    - mkdir builds/linux/amd64
+    - mkdir builds/linux/386
+    - mkdir builds/linux/arm
+    - mkdir builds/linux/arm64
+    
+    - go get github.com/gofrs/uuid
+    
     - GOOS=linux GOARCH=amd64 go build $REPO_NAME -o builds/linux/amd64/failstats
-    - GOOS=linux GOARCH=386 go build $REPO_NAME -o builds/linux/386/failstats
+    - GOOS=linux GOARCH=386 go build $REPO_NAME -o builds/linux/i386/failstats
     - GOOS=linux GOARCH=arm go build $REPO_NAME -o builds/linux/arm/failstats
     - GOOS=linux GOARCH=arm64 go build $REPO_NAME -o builds/linux/arm64/failstats
   artifacts:
@@ -32,3 +35,56 @@ build:
     name: "$CI_JOB_NAME"
     paths:
       - builds
+
+nfpm:
+  stage: build_nfpm
+  script: 
+    - go get github.com/goreleaser/nfpm
+    - go get -t github.com/goreleaser/nfpm/...
+
+    - go test github.com/goreleaser/nfpm    
+    - git clone https://github.com/goreleaser/nfpm nfpmGit
+    - go build -o nfpm nfpmGit/cmd/nfpm/main.go
+
+    - ./nfpm
+  artifacts:
+    when: on_success
+    name: "$CI_JOB_NAME"
+    paths:
+      - builds
+      - nfpm
+
+nfpmPkgs:
+  stage: package
+  script:
+    - version="$(cat version)"
+    - sed -i -e "s/{version}/$version/g" nfpm.yaml
+
+    - cp -f nfpm.yaml nfpmActual.yaml
+    - sed -i -e "s/{arch}/amd64/g" nfpmActual.yaml
+    - mkdir pkg
+    - ./nfpm pkg --config ./nfpmActual.yaml --target "pkg/failstats_dev-${CI_COMMIT_SHORT_SHA}-${version}_amd64.deb"
+    - ./nfpm pkg --config ./nfpmActual.yaml --target "pkg/failstats_dev-${CI_COMMIT_SHORT_SHA}-${version}_amd64.rpm"
+
+    - cp -f nfpm.yaml nfpmActual.yaml
+    - sed -i -e "s/{arch}/i386/g" nfpmActual.yaml
+    - ./nfpm pkg --config ./nfpmActual.yaml --target "pkg/failstats_dev-${CI_COMMIT_SHORT_SHA}-${version}_i386.deb"
+    - ./nfpm pkg --config ./nfpmActual.yaml --target "pkg/failstats_dev-${CI_COMMIT_SHORT_SHA}-${version}_i386.rpm"
+
+    - cp -f nfpm.yaml nfpmActual.yaml
+    - sed -i -e "s/{arch}/arm/g" nfpmActual.yaml
+    - ./nfpm pkg --config ./nfpmActual.yaml --target "pkg/failstats_dev-${CI_COMMIT_SHORT_SHA}-${version}_arm.deb"
+    - ./nfpm pkg --config ./nfpmActual.yaml --target "pkg/failstats_dev-${CI_COMMIT_SHORT_SHA}-${version}_arm.rpm"
+
+    - cp -f nfpm.yaml nfpmActual.yaml
+    - sed -i -e "s/{arch}/arm64/g" nfpmActual.yaml
+    - ./nfpm pkg --config ./nfpmActual.yaml --target "pkg/failstats_dev-${CI_COMMIT_SHORT_SHA}-${version}_arm64.deb"
+    - ./nfpm pkg --config ./nfpmActual.yaml --target "pkg/failstats_dev-${CI_COMMIT_SHORT_SHA}-${version}_arm64.rpm"
+
+  artifacts:
+    when: on_success
+    name: "$CI_JOB_NAME"
+    paths:
+      - builds
+      - pkg
+    

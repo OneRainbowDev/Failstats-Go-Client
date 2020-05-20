@@ -19,6 +19,7 @@ files:
   ./builds/linux/{arch}/failstats: "/usr/local/bin/failstats"
 config_files:
   ./failstats.conf: "/etc/failstats.conf"
+  ./failstats.service: "/etc/systemd/system/failstats.service"
 overrides:
   rpm:
     scripts:

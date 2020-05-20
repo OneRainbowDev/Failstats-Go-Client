@@ -1,0 +1,13 @@
+[Unit]
+Description=Parses fail2ban logs for various statistics and sends to https://failstats.net
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/failstats
+User=failstats
+Group=adm
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -27,7 +27,7 @@ build:
     - go get github.com/gofrs/uuid
     
     - GOOS=linux GOARCH=amd64 go build $REPO_NAME -o builds/linux/amd64/failstats
-    - GOOS=linux GOARCH=386 go build $REPO_NAME -o builds/linux/386/failstats
+    - GOOS=linux GOARCH=386 go build $REPO_NAME -o builds/linux/i386/failstats
     - GOOS=linux GOARCH=arm go build $REPO_NAME -o builds/linux/arm/failstats
     - GOOS=linux GOARCH=arm64 go build $REPO_NAME -o builds/linux/arm64/failstats
   artifacts:
@@ -59,13 +59,13 @@ nfpmPkgs:
   script:
     - version="$(cat version)"
 
-    - cp nfpm.yaml nfpmActual.yaml
+    - cp -f nfpm.yaml nfpmActual.yaml
     - sed -i -e "s/{arch}/amd64/g" nfpmActual.yaml
     - sed -i -e "s/{version}/$version/g" nfpmActual.yaml
     
     - mkdir pkg
-    - ./nfpm pkg --config ./nfpmActual.yaml --target pkg/failstats_dev$CI_BUILD_ID_$version_amd64.deb
-    - ./nfpm pkg --config ./nfpmActual.yaml --target pkg/failstats_dev$CI_BUILD_ID_$version_amd64.rpm
+    - ./nfpm pkg --config ./nfpmActual.yaml --target "pkg/failstats_dev-${CI_COMMIT_SHORT_SHA}-${version}_amd64.deb"
+    - ./nfpm pkg --config ./nfpmActual.yaml --target "pkg/failstats_dev-${CI_COMMIT_SHORT_SHA}-${version}_i386.deb"
 
   artifacts:
     when: on_success

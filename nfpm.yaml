@@ -16,6 +16,6 @@ homepage: "https://failstats.net"
 license: "MIT"
 bindir: "/usr/local/bin"
 files:
-  ./builds/linux/amd64/failstats: "/usr/local/bin/failstats"
+  ./builds/linux/{arch}/failstats: "/usr/local/bin/failstats"
 config_files:
   ./failstats.conf: "/etc/failstats.conf"

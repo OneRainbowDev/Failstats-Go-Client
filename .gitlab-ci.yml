@@ -40,6 +40,9 @@ nfpm:
     - go get -t github.com/goreleaser/nfpm/...
 
     - go test github.com/goreleaser/nfpm
-    - go build -o nfpm github.com/goreleaser/nfpm/cmd/nfpm/main.go
+    
+    - git clone https://github.com/goreleaser/nfpm nfpmGit
+    
+    - go build -o nfpm nfpmGit/cmd/nfpm/main.go
 
     - ./nfpm

@@ -59,7 +59,7 @@ nfpmPkgs:
   script:
     - version="$(cat version)"
 
-    - cp npfm.yaml npfmActual.yaml
+    - cp nfpm.yaml npfmActual.yaml
     - sed -i -e 's/{arch}/amd64/g' npfmActual.yaml
     - sed -i -e 's/{version}/$version/g' npfmActual.yaml
     

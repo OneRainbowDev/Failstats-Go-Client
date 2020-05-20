@@ -4,6 +4,7 @@ stages:
   - test
   - build
   - build_nfpm
+  - package
 
 test:
   stage: test
@@ -22,7 +23,9 @@ build:
     - mkdir builds/linux/386
     - mkdir builds/linux/arm
     - mkdir builds/linux/arm64
+    
     - go get github.com/gofrs/uuid
+    
     - GOOS=linux GOARCH=amd64 go build $REPO_NAME -o builds/linux/amd64/failstats
     - GOOS=linux GOARCH=386 go build $REPO_NAME -o builds/linux/386/failstats
     - GOOS=linux GOARCH=arm go build $REPO_NAME -o builds/linux/arm/failstats
@@ -39,10 +42,8 @@ nfpm:
     - go get github.com/goreleaser/nfpm
     - go get -t github.com/goreleaser/nfpm/...
 
-    - go test github.com/goreleaser/nfpm
-    
+    - go test github.com/goreleaser/nfpm    
     - git clone https://github.com/goreleaser/nfpm nfpmGit
-    
     - go build -o nfpm nfpmGit/cmd/nfpm/main.go
 
     - ./nfpm
@@ -52,3 +53,23 @@ nfpm:
     paths:
       - builds
       - nfpm
+
+nfpmPkgs:
+  stage: package
+  script:
+    - version="$(cat version)"
+
+    - cp npfm.yaml npfmActual.yaml
+    - sed -i -e 's/{arch}/amd64/g' npfmActual.yaml
+    - sed -i -e 's/{version}/$version/g' npfmActual.yaml
+    
+    - ./nfpm pkg --config ./nfpmActual.yaml --target pkg/failstats_dev$CI_BUILD_ID_$version_amd64.deb
+    - ./nfpm pkg --config ./nfpmActual.yaml --target pkg/failstats_dev$CI_BUILD_ID_$version_amd64.rpm
+
+  artifacts:
+    when: on_success
+    name: "$CI_JOB_NAME"
+    paths:
+      - builds
+      - pkg
+    

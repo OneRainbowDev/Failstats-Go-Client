@@ -1,5 +1,0 @@
-{
-    "name": "golang-failstats",
-    "version": 0.1,
-    "description": "A tool to automatically report fail2ban ban statistics to failstats.net"
-}

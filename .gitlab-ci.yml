@@ -3,7 +3,7 @@ image: golang:latest
 stages: 
   - test
   - build
-  - package
+  - build_nfpm
 
 test:
   stage: test
@@ -34,7 +34,7 @@ build:
       - builds
 
 nfpm:
-  stage: package
+  stage: build_nfpm
   script: 
     - go get github.com/goreleaser/nfpm
     - go get -t github.com/goreleaser/nfpm/...
@@ -46,3 +46,9 @@ nfpm:
     - go build -o nfpm nfpmGit/cmd/nfpm/main.go
 
     - ./nfpm
+  artifacts:
+    when: on_success
+    name: "$CI_JOB_NAME"
+    paths:
+      - builds
+      - nfpm

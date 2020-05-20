@@ -36,8 +36,7 @@ build:
 nfpm:
   stage: package
   script: 
-    - git clone https://github.com/goreleaser/nfpm.git /usr/local/go/src/nfpm/
-    
+    - go get github.com/goreleaser/nfpm    
     - go get github.com/gofrs/uuid
     - go get github.com/Masterminds/semver
     - go get github.com/imdario/mergo
@@ -47,6 +46,8 @@ nfpm:
     - go get gopkg.in/yaml.v2
 
     - go get github.com/alecthomas/kingpin
+    - go get github.com/goreleaser/nfpm/deb
+    - go get github.com/goreleaser/nfpm/rpm
 
     - go test nfpm
     - go build -o nfpm /usr/local/go/src/nfpm/cmd/nfpm

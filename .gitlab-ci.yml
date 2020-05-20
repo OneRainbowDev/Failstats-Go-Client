@@ -39,7 +39,7 @@ nfpm:
     - git clone https://github.com/goreleaser/nfpm.git /usr/local/go/src/nfpm/
     
     - go get github.com/gofrs/uuid
-    - go get github.com/Masterminds/semver/v3
+    - go get github.com/Masterminds/semver
     - go get github.com/imdario/mergo
     - go get github.com/pkg/errors
     - go get github.com/goreleaser/nfpm/glob

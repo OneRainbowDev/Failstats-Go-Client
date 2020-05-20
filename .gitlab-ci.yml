@@ -58,14 +58,28 @@ nfpmPkgs:
   stage: package
   script:
     - version="$(cat version)"
+    - sed -i -e "s/{version}/$version/g" nfpm.yaml
 
     - cp -f nfpm.yaml nfpmActual.yaml
     - sed -i -e "s/{arch}/amd64/g" nfpmActual.yaml
-    - sed -i -e "s/{version}/$version/g" nfpmActual.yaml
-    
     - mkdir pkg
     - ./nfpm pkg --config ./nfpmActual.yaml --target "pkg/failstats_dev-${CI_COMMIT_SHORT_SHA}-${version}_amd64.deb"
+    - ./nfpm pkg --config ./nfpmActual.yaml --target "pkg/failstats_dev-${CI_COMMIT_SHORT_SHA}-${version}_amd64.rpm"
+
+    - cp -f nfpm.yaml nfpmActual.yaml
+    - sed -i -e "s/{arch}/i386/g" nfpmActual.yaml
     - ./nfpm pkg --config ./nfpmActual.yaml --target "pkg/failstats_dev-${CI_COMMIT_SHORT_SHA}-${version}_i386.deb"
+    - ./nfpm pkg --config ./nfpmActual.yaml --target "pkg/failstats_dev-${CI_COMMIT_SHORT_SHA}-${version}_i386.rpm"
+
+    - cp -f nfpm.yaml nfpmActual.yaml
+    - sed -i -e "s/{arch}/arm/g" nfpmActual.yaml
+    - ./nfpm pkg --config ./nfpmActual.yaml --target "pkg/failstats_dev-${CI_COMMIT_SHORT_SHA}-${version}_arm.deb"
+    - ./nfpm pkg --config ./nfpmActual.yaml --target "pkg/failstats_dev-${CI_COMMIT_SHORT_SHA}-${version}_arm.rpm"
+
+    - cp -f nfpm.yaml nfpmActual.yaml
+    - sed -i -e "s/{arch}/arm64/g" nfpmActual.yaml
+    - ./nfpm pkg --config ./nfpmActual.yaml --target "pkg/failstats_dev-${CI_COMMIT_SHORT_SHA}-${version}_arm64.deb"
+    - ./nfpm pkg --config ./nfpmActual.yaml --target "pkg/failstats_dev-${CI_COMMIT_SHORT_SHA}-${version}_arm64.rpm"
 
   artifacts:
     when: on_success

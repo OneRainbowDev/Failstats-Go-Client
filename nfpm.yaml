@@ -19,3 +19,12 @@ files:
   ./builds/linux/{arch}/failstats: "/usr/local/bin/failstats"
 config_files:
   ./failstats.conf: "/etc/failstats.conf"
+overrides:
+  rpm:
+    scripts:
+      postinstall: ./scripts/postinstall.sh
+      preremove: ./scripts/preremove.sh
+  deb:
+    scripts:
+      postinstall: ./scripts/postinstall.sh
+      preremove: ./scripts/preremove.sh

@@ -40,10 +40,10 @@ nfpm:
     
     - go get github.com/gofrs/uuid
     - go get github.com/Masterminds/semver/v3
-	  - go get github.com/imdario/mergo
-	  - go get github.com/pkg/errors
-    - go get github.com/goreleaser/nfpm/glob"
-	  - go get github.com/goreleaser/nfpm/internal/helpers
+    - go get github.com/imdario/mergo
+    - go get github.com/pkg/errors
+    - go get github.com/goreleaser/nfpm/glob
+    - go get github.com/goreleaser/nfpm/internal/helpers
     - go get gopkg.in/yaml.v2
 
     - go get github.com/alecthomas/kingpin

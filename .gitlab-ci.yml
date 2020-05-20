@@ -36,8 +36,9 @@ build:
 nfpm:
   stage: package
   script: 
-    - go get github.com/goreleaser/nfpm    
-
+    - go get github.com/goreleaser/nfpm
+    - go get github.com/goreleaser/nfpm/...
+    
     - go test github.com/goreleaser/nfpm
     - go build -o nfpm /usr/local/go/src/nfpm/cmd/nfpm/main.go
 

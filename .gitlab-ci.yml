@@ -60,8 +60,8 @@ nfpmPkgs:
     - version="$(cat version)"
 
     - cp nfpm.yaml nfpmActual.yaml
-    - sed -i -e 's/{arch}/amd64/g' nfpmActual.yaml
-    - sed -i -e 's/{version}/$version/g' nfpmActual.yaml
+    - sed -i -e "s/{arch}/amd64/g" nfpmActual.yaml
+    - sed -i -e "s/{version}/$version/g" nfpmActual.yaml
     
     - ./nfpm pkg --config ./nfpmActual.yaml --target pkg/failstats_dev$CI_BUILD_ID_$version_amd64.deb
     - ./nfpm pkg --config ./nfpmActual.yaml --target pkg/failstats_dev$CI_BUILD_ID_$version_amd64.rpm

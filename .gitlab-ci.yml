@@ -44,7 +44,7 @@ nfpm:
 
     - go test github.com/goreleaser/nfpm    
     - git clone https://github.com/goreleaser/nfpm nfpmGit
-    - cd nfpmGit && git reset --hard d1dc822eb89a3498cb3dec980c823bfb037b1e32 && cd ..
+    #- cd nfpmGit && git reset --hard d1dc822eb89a3498cb3dec980c823bfb037b1e32 && cd ..
     - go build -o nfpm nfpmGit/cmd/nfpm/main.go
 
     - ./nfpm

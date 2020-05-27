@@ -14,7 +14,6 @@ description:  Reports fail2ban statistics to failstats.net
 vendor: "EngieDev"
 homepage: "https://failstats.net"
 license: "MIT"
-bindir: "/usr/local/bin"
 files:
   ./builds/linux/{arch}/failstats: "/usr/local/bin/failstats"
 config_files:

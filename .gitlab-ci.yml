@@ -93,7 +93,7 @@ deploy_debs:
   stage: deploy
   only:
     refs:
-      - v*.*.*
+      - /^v.*$/
   before_script:
     - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
     - eval $(ssh-agent -s)

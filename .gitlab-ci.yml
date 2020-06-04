@@ -5,6 +5,7 @@ stages:
   - build
   - build_nfpm
   - package
+  - deploy
 
 test:
   stage: test
@@ -44,7 +45,6 @@ nfpm:
 
     - go test github.com/goreleaser/nfpm    
     - git clone https://github.com/goreleaser/nfpm nfpmGit
-    #- cd nfpmGit && git reset --hard d1dc822eb89a3498cb3dec980c823bfb037b1e32 && cd ..
     - go build -o nfpm nfpmGit/cmd/nfpm/main.go
 
     - ./nfpm
@@ -88,4 +88,26 @@ nfpmPkgs:
     paths:
       - builds
       - pkg
-    
+
+deploy_debs:
+  stage: deploy
+  only:
+    refs:
+      - master
+      - v*
+  before_script:
+    - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+  script:
+    - mkdir deploy
+    - echo test
+  artifacts:
+    when: on_success
+    name: "$CI_JOB_NAME"
+    paths:
+      - builds
+      - pkg
+      - deploy

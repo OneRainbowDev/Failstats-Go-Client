@@ -98,9 +98,9 @@ deploy_debs:
     - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p /.ssh && touch /.ssh/known_hosts
-    - echo "$SSH_KNOWN_HOSTS" >> /.ssh/known_hosts
-    - mkdir -p ~/.ssh
+    - mkdir -p ~/.ssh && touch ~/.ssh/known_hosts
+    - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
     - chmod 700 ~/.ssh
   script:
     - mkdir deploy

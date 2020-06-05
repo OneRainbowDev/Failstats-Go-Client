@@ -118,3 +118,33 @@ deploy_debs:
       - builds
       - pkg
       - deploy
+
+deploy_rpms:
+  stage: deploy
+  only:
+    refs:
+      - /^v.*$/
+  before_script:
+    - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh && touch ~/.ssh/known_hosts
+    - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - chmod 700 ~/.ssh
+  script:
+    - mkdir deploy
+    - version="$(cat version)"
+    - cp pkg/failstats_dev-${CI_COMMIT_SHORT_SHA}-${version}_arm64.rpm deploy/failstats-${version}-1.arm64.rpm
+    - cp pkg/failstats_dev-${CI_COMMIT_SHORT_SHA}-${version}_arm.rpm deploy/failstats-${version}-1.armhf.rpm
+    - cp pkg/failstats_dev-${CI_COMMIT_SHORT_SHA}-${version}_i386.rpm deploy/failstats-${version}-1.i386.rpm
+    - cp pkg/failstats_dev-${CI_COMMIT_SHORT_SHA}-${version}_amd64.rpm deploy/failstats-${version}-1.amd64.rpm
+
+    - scp deploy/* web@engiedev.net:~/packages/rpms/
+  artifacts:
+    when: on_success
+    name: "$CI_JOB_NAME"
+    paths:
+      - builds
+      - pkg
+      - deploy

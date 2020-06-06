@@ -1,5 +1,5 @@
 #!/bin/bash
-adduser --shell=/bin/false --no-create-home --system --disabled-password failstats
+adduser --shell=/bin/false --no-create-home --system failstats
 mkdir /var/lib/failstats/
 chown failstats /var/lib/failstats/
 

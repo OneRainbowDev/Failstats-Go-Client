@@ -25,6 +25,8 @@ type Configuration struct {
 	RepRate int    `json:"repRateSeconds"`
 }
 
+var version string
+
 func main() {
 	conf := loadConf()
 	UUID := fetchUUID()
@@ -194,6 +196,17 @@ func processBans(logDir string, logName string, guuid string) {
 	}
 
 	id.Write([]byte(guuid))
+
+	// POST version data
+	versionPost, err := writer.CreateFormField("version")
+
+	if err != nil {
+		log.Println("Failed create post request")
+		log.Fatal(err)
+		os.Remove(file.Name())
+	}
+
+	versionPost.Write([]byte(version))
 
 	// Adds GZIP file
 	fileData, err := writer.CreateFormFile("data", "data.json.gz")

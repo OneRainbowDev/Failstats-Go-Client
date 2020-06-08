@@ -27,10 +27,12 @@ build:
     
     - go get github.com/gofrs/uuid
     
-    - GOOS=linux GOARCH=amd64 go build $REPO_NAME -o builds/linux/amd64/failstats
-    - GOOS=linux GOARCH=386 go build $REPO_NAME -o builds/linux/i386/failstats
-    - GOOS=linux GOARCH=arm go build $REPO_NAME -o builds/linux/arm/failstats
-    - GOOS=linux GOARCH=arm64 go build $REPO_NAME -o builds/linux/arm64/failstats
+    - version="$(cat version)"
+
+    - GOOS=linux GOARCH=amd64 go build $REPO_NAME -o builds/linux/amd64/failstats -ldflags "-X main.version=$version"
+    - GOOS=linux GOARCH=386 go build $REPO_NAME -o builds/linux/i386/failstats -ldflags "-X main.version=$version"
+    - GOOS=linux GOARCH=arm go build $REPO_NAME -o builds/linux/arm/failstats -ldflags "-X main.version=$version"
+    - GOOS=linux GOARCH=arm64 go build $REPO_NAME -o builds/linux/arm64/failstats -ldflags "-X main.version=$version"
   artifacts:
     when: on_success
     name: "$CI_JOB_NAME"

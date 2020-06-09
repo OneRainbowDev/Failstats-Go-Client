@@ -23,7 +23,7 @@ type Configuration struct {
 	LogDir         string   `json:"logDir"`
 	LogName        string   `json:"logName"`
 	RepRate        int      `json:"repRateSeconds"`
-	ReportServices int      `json:"reportService"`
+	ReportServices int      `json:"reportServices"`
 	DontReport     []string `json:"dontReport"`
 }
 

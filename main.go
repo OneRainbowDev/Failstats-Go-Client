@@ -31,6 +31,7 @@ func main() {
 	conf := loadConf()
 	UUID := fetchUUID()
 
+	log.Println("Version " + version)
 	log.Println("Loaded settings")
 
 	processBans(conf.LogDir, conf.LogName, UUID)

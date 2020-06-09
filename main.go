@@ -20,9 +20,11 @@ import (
 
 // Configuration struct
 type Configuration struct {
-	LogDir  string `json:"logDir"`
-	LogName string `json:"logName"`
-	RepRate int    `json:"repRateSeconds"`
+	LogDir         string   `json:"logDir"`
+	LogName        string   `json:"logName"`
+	RepRate        int      `json:"repRateSeconds"`
+	ReportServices int      `json:"reportService"`
+	DontReport     []string `json:"dontReport"`
 }
 
 var version string
@@ -34,11 +36,11 @@ func main() {
 	log.Println("Version " + version)
 	log.Println("Loaded settings")
 
-	processBans(conf.LogDir, conf.LogName, UUID)
+	processBans(conf.LogDir, conf.LogName, UUID, conf.ReportServices, conf.DontReport)
 
 	// Loops forever, should use negligible resources
 	for range time.NewTicker(time.Duration(conf.RepRate) * time.Second).C {
-		processBans(conf.LogDir, conf.LogName, UUID)
+		processBans(conf.LogDir, conf.LogName, UUID, conf.ReportServices, conf.DontReport)
 	}
 }
 
@@ -58,8 +60,18 @@ func loadConf() Configuration {
 	return conf
 }
 
+// Helper function - checks if string str is in slice list
+func stringInStringSlice(str string, list []string) bool {
+	for _, st := range list {
+		if st == str {
+			return true
+		}
+	}
+	return false
+}
+
 // Processes the fail2ban logs, parses out all the new bans after a given datetime
-func processBans(logDir string, logName string, guuid string) {
+func processBans(logDir string, logName string, guuid string, reportServices int, dontReport []string) {
 	// Finds log files
 	logFiles := findLogFiles(logDir, logName)
 
@@ -73,7 +85,9 @@ func processBans(logDir string, logName string, guuid string) {
 	var scanner *bufio.Scanner
 	var banDates []string
 	var banIPs []string
-	re := regexp.MustCompile(`(?i)(\d+-\d+-\d+ \d+:\d+:\d+,\d+)\sfail2ban.actions\W+.*\WBan (.*)`)
+	var services []string
+
+	re := regexp.MustCompile(`(?i)(\d+-\d+-\d+ \d+:\d+:\d+,\d+)\sfail2ban.actions\W+.*\WNOTICE\W+.*\[(.*)\].*Ban (.*)`)
 	current := lastRunTime
 
 	// Parses the file into the above variables
@@ -126,7 +140,24 @@ func processBans(logDir string, logName string, guuid string) {
 					utcDate := date.Add(time.Duration(-offset) * time.Second)
 
 					banDates = append(banDates, utcDate.Format("2006-01-02 15:04:05")+" UTC+0000")
-					banIPs = append(banIPs, string(matches[2]))
+
+					// Checks if service information can be reported at all
+					if reportServices == 0 {
+						services = append(services, "undisclosed")
+					} else {
+						// Checks if current matched service is in the list of services that shouldn't be reported
+						if len(dontReport) == 0 {
+							services = append(services, string(matches[2]))
+						} else {
+							if stringInStringSlice(string(matches[2]), dontReport) {
+								services = append(services, "undisclosed")
+							} else {
+								services = append(services, string(matches[2]))
+							}
+						}
+					}
+
+					banIPs = append(banIPs, string(matches[3]))
 				} else {
 					// Has to complete the file
 					lastFile = true
@@ -152,7 +183,7 @@ func processBans(logDir string, logName string, guuid string) {
 	// Puts data into one var
 	var data [][]string
 	for i := 0; i <= len(banDates)-1; i++ {
-		data = append(data, []string{banDates[i], banIPs[i]})
+		data = append(data, []string{banDates[i], banIPs[i], services[i]})
 	}
 
 	jsonData, err := json.Marshal(data)

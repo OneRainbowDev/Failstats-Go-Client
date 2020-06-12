@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
+	"errors"
 	"io"
 	"io/ioutil"
 	"log"
@@ -27,37 +28,53 @@ type Configuration struct {
 	DontReport     []string `json:"dontReport"`
 }
 
-var version string
+var version = "test"
 
 func main() {
-	conf := loadConf()
-	UUID := fetchUUID()
+	conf, err := loadConf("/etc/failstats.conf")
+
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
+	UUID, err := fetchUUID("/var/lib/failstats/uuid")
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
 
 	log.Println("Version " + version)
 	log.Println("Loaded settings")
 
-	processBans(conf.LogDir, conf.LogName, UUID, conf.ReportServices, conf.DontReport)
+	_, err = processBans(conf.LogDir, conf.LogName, UUID, conf.ReportServices, conf.DontReport, "/var/lib/failstats/lastrun")
+	if err != nil {
+		log.Fatal("Quitting due to error")
+	}
 
 	// Loops forever, should use negligible resources
 	for range time.NewTicker(time.Duration(conf.RepRate) * time.Second).C {
-		processBans(conf.LogDir, conf.LogName, UUID, conf.ReportServices, conf.DontReport)
+		_, err = processBans(conf.LogDir, conf.LogName, UUID, conf.ReportServices, conf.DontReport, "/var/lib/failstats/lastrun")
+		if err != nil {
+			log.Fatal("Quitting due to error")
+		}
 	}
 }
 
 // Load config file
-func loadConf() Configuration {
-	bytes, err := ioutil.ReadFile("/etc/failstats.conf")
+func loadConf(confFile string) (Configuration, error) {
+	bytes, err := ioutil.ReadFile(confFile)
+	var conf Configuration
 	if err != nil {
-		log.Fatal(err)
+		log.Println("Failed to access configuration file")
+		return conf, err
 	}
 
-	var conf Configuration
 	err = json.Unmarshal(bytes, &conf)
 	if err != nil {
-		log.Fatal(err)
+		log.Println("Failed to load configuration file")
+		return conf, err
 	}
 
-	return conf
+	return conf, nil
 }
 
 // Helper function - checks if string str is in slice list
@@ -71,12 +88,20 @@ func stringInStringSlice(str string, list []string) bool {
 }
 
 // Processes the fail2ban logs, parses out all the new bans after a given datetime
-func processBans(logDir string, logName string, guuid string, reportServices int, dontReport []string) {
+func processBans(logDir string, logName string, guuid string, reportServices int, dontReport []string, lastRunLocation string) (int, error) {
 	// Finds log files
-	logFiles := findLogFiles(logDir, logName)
+	logFiles, err := findLogFiles(logDir, logName)
+
+	if err != nil {
+		return 0, err
+	}
 
 	// Gets last run
-	lastRunTime := lastRun()
+	lastRunTime, err := lastRun(lastRunLocation)
+
+	if err != nil {
+		return 0, err
+	}
 
 	// Gets current timezone offset
 	t := time.Now()
@@ -95,7 +120,7 @@ func processBans(logDir string, logName string, guuid string, reportServices int
 		logFile, err := os.Open(logDir + file)
 
 		if err != nil {
-			log.Fatal(err)
+			return 0, err
 		}
 
 		defer logFile.Close()
@@ -105,7 +130,7 @@ func processBans(logDir string, logName string, guuid string, reportServices int
 			gz, err := gzip.NewReader(logFile)
 
 			if err != nil {
-				log.Fatal(err)
+				return 0, err
 			}
 
 			defer gz.Close()
@@ -127,7 +152,7 @@ func processBans(logDir string, logName string, guuid string, reportServices int
 
 				if err != nil {
 					log.Println("Failed to parse date.")
-					log.Fatal(err)
+					return 0, err
 				}
 
 				// Its late and date.equals doesn't seem to work, even if I set the locations to be the same
@@ -177,7 +202,7 @@ func processBans(logDir string, logName string, guuid string, reportServices int
 	// Checks if there is data to send, returns otherwise
 	if len(banIPs) == 0 {
 		log.Println("0 bans proccessed")
-		return
+		return 1, nil
 	}
 
 	// Puts data into one var
@@ -189,7 +214,7 @@ func processBans(logDir string, logName string, guuid string, reportServices int
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		log.Println("Failed to create json")
-		log.Fatal(err)
+		return 0, err
 	}
 
 	// Saves to gzip file
@@ -197,7 +222,7 @@ func processBans(logDir string, logName string, guuid string, reportServices int
 
 	if err != nil {
 		log.Println("Failed to make json gzip")
-		log.Fatal(err)
+		return 0, err
 	}
 
 	gzipFile := gzip.NewWriter(file)
@@ -205,8 +230,8 @@ func processBans(logDir string, logName string, guuid string, reportServices int
 
 	if err != nil {
 		log.Println("Failed to write json to file")
-		log.Fatal(err)
 		os.Remove(file.Name())
+		return 0, err
 	}
 
 	gzipFile.Close()
@@ -223,8 +248,8 @@ func processBans(logDir string, logName string, guuid string, reportServices int
 
 	if err != nil {
 		log.Println("Failed create post request")
-		log.Fatal(err)
 		os.Remove(file.Name())
+		return 0, err
 	}
 
 	id.Write([]byte(guuid))
@@ -234,8 +259,8 @@ func processBans(logDir string, logName string, guuid string, reportServices int
 
 	if err != nil {
 		log.Println("Failed create post request")
-		log.Fatal(err)
 		os.Remove(file.Name())
+		return 0, err
 	}
 
 	versionPost.Write([]byte(version))
@@ -245,8 +270,8 @@ func processBans(logDir string, logName string, guuid string, reportServices int
 
 	if err != nil {
 		log.Println("Failed create post request")
-		log.Fatal(err)
 		os.Remove(file.Name())
+		return 0, err
 	}
 
 	// Reopens data.json.gz
@@ -254,16 +279,16 @@ func processBans(logDir string, logName string, guuid string, reportServices int
 	file, err = os.Open(fileLocation)
 	if err != nil {
 		log.Println("Failed create post request")
-		log.Fatal(err)
 		os.Remove(fileLocation)
+		return 0, err
 	}
 
 	_, err = io.Copy(fileData, file)
 
 	if err != nil {
 		log.Println("Failed create post request")
-		log.Fatal(err)
 		os.Remove(file.Name())
+		return 0, err
 	}
 
 	// Terminating boundary
@@ -275,7 +300,7 @@ func processBans(logDir string, logName string, guuid string, reportServices int
 
 	if err != nil {
 		log.Println("Failed create post request")
-		log.Fatal(err)
+		return 0, err
 	}
 
 	request.Header.Set("Content-Type", writer.FormDataContentType())
@@ -289,29 +314,34 @@ func processBans(logDir string, logName string, guuid string, reportServices int
 
 	if err != nil {
 		log.Println("Failed to connect to server")
-		log.Println(err)
-		return
+		return 0, err
 	}
 
 	scanner = bufio.NewScanner(result.Body)
 	scanner.Scan()
 
 	if scanner.Text() != "1" {
-		log.Println("Failed to transfer data")
-		return
+		log.Println("Failed to transfer data - code: " + scanner.Text())
+		return 0, errors.New("Failed to transfer data")
 	}
 
 	// Saves the last run
-	saveRun(current)
+	err = saveRun(current, lastRunLocation)
+
+	if err != nil {
+		return 0, err
+	}
 	log.Println(len(banIPs), "bans proccessed")
+
+	return 2, nil
 }
 
 // Finds the log files, errors out if failed. Returns a list of matching fileinfos
-func findLogFiles(logDir string, logName string) []string {
+func findLogFiles(logDir string, logName string) ([]string, error) {
 	files, err := ioutil.ReadDir(logDir)
 	if err != nil {
 		log.Println("Failed to find log directory: " + logDir)
-		log.Fatal(err)
+		return nil, err
 	}
 
 	re := regexp.MustCompile(logName)
@@ -330,7 +360,9 @@ func findLogFiles(logDir string, logName string) []string {
 	}
 
 	if len(logFiles) == 0 {
-		log.Fatal("No fail2ban logs found")
+		log.Println("No fail2ban logs found")
+		err = errors.New("Check fail2ban log path - no log files found")
+		return nil, err
 	}
 
 	// Orders the slice of log files. Newest first
@@ -345,7 +377,7 @@ func findLogFiles(logDir string, logName string) []string {
 
 	}
 
-	return logFiles
+	return logFiles, nil
 }
 
 // Reverses slice and returns it
@@ -358,23 +390,30 @@ func reverseStrSlice(data []string) []string {
 	return reversedStr
 }
 
-// Gets the last run time from \var\lib\failstats
-func lastRun() time.Time {
+// Gets the last run time from lastRunFile
+func lastRun(lastRunFile string) (time.Time, error) {
 	// Checks if file exists
-	_, err := os.Stat("/var/lib/failstats/lastrun")
+	fileStat, err := os.Stat(lastRunFile)
+
+	defaultTime := time.Date(1, 1, 1, 1, 1, 1, 1, time.UTC)
 
 	if err != nil {
 		if os.IsNotExist(err) {
-			log.Println("No lastrun file exists, generating new one")
-			return time.Date(1, 1, 1, 1, 1, 1, 1, time.UTC)
+			log.Println("No lastrun file exists - defaulting to 01:01 1/1/1")
+			return defaultTime, nil
 		}
-		log.Println("Unable to access /var/lib/failstats/lastrun")
-		log.Fatal(err)
+		log.Println("Unable to access " + lastRunFile)
+		return defaultTime, err
 	}
 
-	timeFile, err := os.Open("/var/lib/failstats/lastrun")
+	if fileStat.IsDir() {
+		return defaultTime, errors.New(lastRunFile + " is a directory")
+	}
+
+	timeFile, err := os.Open(lastRunFile)
 	if err != nil {
-		log.Fatal(err)
+		log.Println("Failed to open " + lastRunFile)
+		return defaultTime, err
 	}
 	defer timeFile.Close()
 
@@ -386,50 +425,58 @@ func lastRun() time.Time {
 	lastR, err := time.Parse(time.RFC3339, timeStr)
 
 	if err != nil {
-		log.Println("Unable to parse last run time from /var/lib/failstats/lastrun")
-		log.Fatal(err)
+		log.Println("Unable to parse last run time from " + lastRunFile)
+		return defaultTime, err
 	}
 
-	return lastR
+	return lastR, nil
 }
 
-// Gets the UUID from \var\lib\failstats or generates a new one
-func fetchUUID() string {
+// Gets the UUID from uuidFile or generates a new one
+func fetchUUID(uuidFilePath string) (string, error) {
 	// Checks if file exists
-	_, err := os.Stat("/var/lib/failstats/uuid")
+	fi, err := os.Stat(uuidFilePath)
 
 	if err != nil {
 		if os.IsNotExist(err) {
 			// Generates new one and saves
+			log.Println("No UUID found, generating new one")
 			guuid, err := uuid.NewV4()
 			id := guuid.String()
 
 			if err != nil {
-				log.Fatal(err)
+				log.Println("Failed to generate new UUID")
+				return "", err
 			}
 
 			// Read Write Mode
-			file, err := os.Create("/var/lib/failstats/uuid")
+			file, err := os.Create(uuidFilePath)
 
 			if err != nil {
-				log.Println("Failed to save new uuid to /var/lib/failstats/uuid")
-				log.Fatal(err)
+				log.Println("Failed to save new uuid to " + uuidFilePath)
+				return "", err
 			}
 
 			defer file.Close()
 
 			file.WriteString(id)
 			log.Println("Generated new uuid:", id)
-			return id
+			return id, nil
 		}
 
-		log.Println("Unable to access /var/lib/failstats/uuid")
-		log.Fatal(err)
+		log.Println("Unable to access " + uuidFilePath)
+		return "", err
 	}
 
-	uuidFile, err := os.Open("/var/lib/failstats/uuid")
+	// Checks if file is actually a directory
+	if fi.Mode().IsDir() {
+		return "", errors.New(uuidFilePath + " is a directory")
+	}
+
+	uuidFile, err := os.Open(uuidFilePath)
 	if err != nil {
-		log.Fatal(err)
+		log.Println("Failed to open " + uuidFilePath)
+		return "", err
 	}
 	defer uuidFile.Close()
 
@@ -439,22 +486,24 @@ func fetchUUID() string {
 
 	id := scanner.Text()
 
-	return id
+	return id, nil
 }
 
-// Saves the last runtime to \var\lib\failstats, creating file if it doesn't exist
-func saveRun(timeStr time.Time) {
+// Saves the last runtime to lastRunFile, creating file if it doesn't exist
+func saveRun(timeStr time.Time, lastRunFile string) error {
 	timeString := timeStr.Format(time.RFC3339)
 
 	// Read Write Mode
-	file, err := os.Create("/var/lib/failstats/lastrun")
+	file, err := os.Create(lastRunFile)
 
 	if err != nil {
-		log.Println("Failed to save last runtime to /var/lib/failstats/lastrun")
-		log.Fatal(err)
+		log.Println("Failed to save last runtime to " + lastRunFile)
+		return err
 	}
 
 	defer file.Close()
 
 	file.WriteString(timeString)
+
+	return nil
 }

@@ -11,6 +11,7 @@ test:
   stage: test
   script:
     - go get github.com/gofrs/uuid
+    - go get github.com/google/uuid
     - go fmt 
     - go vet 
     - go test -race -cover
@@ -26,6 +27,7 @@ build:
     - mkdir builds/linux/arm64
     
     - go get github.com/gofrs/uuid
+    - go get github.com/google/uuid
     
     - version="$(cat version)"
 

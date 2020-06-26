@@ -5,7 +5,6 @@ This tool monitors the fail2ban log, reporting data to the [failstats.net](https
 
 ## Todo:
 - Privacy Policy
-- Build instructions
 
 ## Install Instructions:
 Requires fail2ban to be installed and configured to be of use! :)

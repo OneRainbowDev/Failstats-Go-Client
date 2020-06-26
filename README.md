@@ -53,6 +53,19 @@ Configuration options:
 - reportServices: 1 or 0 - 1 to report all service names, 0 to report "undisclosed" for all services
 - dontReport: [] - A list of services to exclude from the service name reporting, e.g: ["jupyter", "nginx]
 
+### Build instructions:
+Fetch dependencies:
+- ``go get github.com/gofrs/uuid``
+- ``go get github.com/google/uuid``
+
+Run tests:
+- ``go fmt``
+- ``go vet``
+- ``go test -race``
+
+Build:
+- ``go build -o failstats``
+
 
 ### Suggestions and/or Issues:
 Please use the issue tracker on github

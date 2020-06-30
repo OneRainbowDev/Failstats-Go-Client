@@ -1,10 +1,10 @@
 # FailStats
-A very common tool to prevent brute force attacks on web facing services is [fail2ban](https://www.fail2ban.org/wiki/index.php/Main_Page), which bans ips if they attempt to access a secured service and fail too many times. This project is an attempt to increase reporting of bans to the website [failstats.net](https://failstats.net).
+A very common tool to prevent brute force attacks on web facing services is [fail2ban](https://www.fail2ban.org/wiki/index.php/Main_Page), which bans IPs if they attempt to access a secured service and fail too many times. This project is an attempt to increase reporting of bans to the website [failstats.net](https://failstats.net).
 
-This tool monitors the fail2ban log, reporting data to the [failstats.net](https://failstats.net) api. 
+This tool monitors the fail2ban log, reporting data to the [failstats.net](https://failstats.net) API. 
 
-## Todo:
-- Privacy Policy
+## Privacy Policy
+This can be found in the footer of [failstats.net](https://failstats.net).
 
 ## Install Instructions:
 Requires fail2ban to be installed and configured to be of use! :)

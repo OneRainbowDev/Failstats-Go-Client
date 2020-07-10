@@ -247,14 +247,14 @@ func TestProcessBans(t *testing.T) {
 	}
 
 	// Tests empty folder
-	status, err := processBans("test_data/logs3/", "fail2ban", "test", 1, []string{"jupyter"}, "/tmp/"+testFile)
+	status, err := processBans("test_data/logs3/", "fail2ban", "test", 1, []string{"jupyter"}, "testing", "/tmp/"+testFile)
 
 	if err == nil || status != 0 {
 		t.Errorf("Shouldn't have found any bans...")
 	}
 
 	// Tests response for no bans
-	status, err = processBans("test_data/logs4/", "fail2ban", "test", 1, []string{"jupyter"}, "/tmp/"+testFile)
+	status, err = processBans("test_data/logs4/", "fail2ban", "test", 1, []string{"jupyter"}, "testing", "/tmp/"+testFile)
 
 	if err == nil && status != 1 {
 		t.Errorf("Service filter has failed or the response to no bans is invalid")
@@ -270,7 +270,7 @@ func TestProcessBans(t *testing.T) {
 	}
 
 	// Tests everything else including submission
-	status, err = processBans("test_data/logs5/", "fail2ban", "test", 1, []string{"jupyter"}, "/tmp/"+testFile)
+	status, err = processBans("test_data/logs5/", "fail2ban", "test", 1, []string{"jupyter"}, "testing", "/tmp/"+testFile)
 
 	if err != nil || status != 2 {
 		t.Errorf("Something went wrong - could be anything... ")

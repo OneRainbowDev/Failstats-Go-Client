@@ -26,6 +26,7 @@ type Configuration struct {
 	RepRate        int      `json:"repRateSeconds"`
 	ReportServices int      `json:"reportServices"`
 	DontReport     []string `json:"dontReport"`
+	apiKey         string   `json:"apiKey"`
 }
 
 var version = "test"
@@ -45,14 +46,14 @@ func main() {
 	log.Println("Version " + version)
 	log.Println("Loaded settings")
 
-	_, err = processBans(conf.LogDir, conf.LogName, UUID, conf.ReportServices, conf.DontReport, "/var/lib/failstats/lastrun")
+	_, err = processBans(conf.LogDir, conf.LogName, UUID, conf.ReportServices, conf.DontReport, conf.apiKey, "/var/lib/failstats/lastrun")
 	if err != nil {
 		log.Fatal("Quitting due to error")
 	}
 
 	// Loops forever, should use negligible resources
 	for range time.NewTicker(time.Duration(conf.RepRate) * time.Second).C {
-		_, err = processBans(conf.LogDir, conf.LogName, UUID, conf.ReportServices, conf.DontReport, "/var/lib/failstats/lastrun")
+		_, err = processBans(conf.LogDir, conf.LogName, UUID, conf.ReportServices, conf.DontReport, conf.apiKey, "/var/lib/failstats/lastrun")
 		if err != nil {
 			log.Fatal("Quitting due to error")
 		}
@@ -88,7 +89,7 @@ func stringInStringSlice(str string, list []string) bool {
 }
 
 // Processes the fail2ban logs, parses out all the new bans after a given datetime
-func processBans(logDir string, logName string, guuid string, reportServices int, dontReport []string, lastRunLocation string) (int, error) {
+func processBans(logDir string, logName string, guuid string, reportServices int, dontReport []string, apiKey string, lastRunLocation string) (int, error) {
 	// Finds log files
 	logFiles, err := findLogFiles(logDir, logName)
 
@@ -265,6 +266,17 @@ func processBans(logDir string, logName string, guuid string, reportServices int
 
 	versionPost.Write([]byte(version))
 
+	// POST api key
+	keyPost, err := writer.CreateFormField("key")
+
+	if err != nil {
+		log.Println("Failed create post request")
+		os.Remove(file.Name())
+		return 0, err
+	}
+
+	keyPost.Write([]byte(apiKey))
+
 	// Adds GZIP file
 	fileData, err := writer.CreateFormFile("data", "data.json.gz")
 
@@ -321,7 +333,7 @@ func processBans(logDir string, logName string, guuid string, reportServices int
 	scanner.Scan()
 
 	if scanner.Text() != "1" {
-		log.Println("Failed to transfer data - code: " + scanner.Text())
+		log.Println("Failed to transfer data: " + scanner.Text())
 		return 0, errors.New("Failed to transfer data")
 	}
 

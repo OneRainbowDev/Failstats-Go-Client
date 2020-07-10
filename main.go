@@ -26,7 +26,7 @@ type Configuration struct {
 	RepRate        int      `json:"repRateSeconds"`
 	ReportServices int      `json:"reportServices"`
 	DontReport     []string `json:"dontReport"`
-	apiKey         string   `json:"apiKey"`
+	APIKey         string   `json:"apiKey"`
 }
 
 var version = "test"
@@ -46,14 +46,14 @@ func main() {
 	log.Println("Version " + version)
 	log.Println("Loaded settings")
 
-	_, err = processBans(conf.LogDir, conf.LogName, UUID, conf.ReportServices, conf.DontReport, conf.apiKey, "/var/lib/failstats/lastrun")
+	_, err = processBans(conf.LogDir, conf.LogName, UUID, conf.ReportServices, conf.DontReport, conf.APIKey, "/var/lib/failstats/lastrun")
 	if err != nil {
 		log.Fatal("Quitting due to error")
 	}
 
 	// Loops forever, should use negligible resources
 	for range time.NewTicker(time.Duration(conf.RepRate) * time.Second).C {
-		_, err = processBans(conf.LogDir, conf.LogName, UUID, conf.ReportServices, conf.DontReport, conf.apiKey, "/var/lib/failstats/lastrun")
+		_, err = processBans(conf.LogDir, conf.LogName, UUID, conf.ReportServices, conf.DontReport, conf.APIKey, "/var/lib/failstats/lastrun")
 		if err != nil {
 			log.Fatal("Quitting due to error")
 		}

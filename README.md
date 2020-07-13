@@ -7,7 +7,9 @@ This tool monitors the fail2ban log, reporting data to the [failstats.net](https
 This can be found in the footer of [failstats.net](https://failstats.net).
 
 ## Install Instructions:
-Requires fail2ban to be installed and configured to be of use! :)
+Requires fail2ban to be installed and configured to be of use! :)  
+
+To submit data to the API, an API key is required. To obtain one, make an account [here](https://failstats.net/accounts/register/) and verify your email address. Once this is done, the API key will appear [here](https://failstats.net/accounts/), and needs to be placed into ``/etc/failstats.conf``.
 
 Signed failstats packages are hosted at [engiedev.net](https://engiedev.net).
 
@@ -51,6 +53,8 @@ Configuration options:
 - repRateSeconds: 3600 - How frequently the log files are checked
 - reportServices: 1 or 0 - 1 to report all service names, 0 to report "undisclosed" for all services
 - dontReport: [] - A list of services to exclude from the service name reporting, e.g: ["jupyter", "nginx]
+
+- apiKey - This is the api token obtained from [here](https://failstats.net/accounts/). 
 
 ### Build instructions:
 Fetch dependencies:

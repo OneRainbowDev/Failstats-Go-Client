@@ -1,5 +1,5 @@
 # FailStats
-A very common tool to prevent brute force attacks on web facing services is [fail2ban](https://www.fail2ban.org/wiki/index.php/Main_Page), which bans IPs if they attempt to access a secured service and fail too many times. This project is an attempt to increase reporting of bans to the website [failstats.net](https://failstats.net).
+A common tool to prevent brute force attacks on web facing services is [fail2ban](https://www.fail2ban.org/wiki/index.php/Main_Page), which bans IPs if they attempt to access a secured service and fail too many times. This project is an attempt to increase reporting of bans to the website [failstats.net](https://failstats.net).
 
 This tool monitors the fail2ban log, reporting data to the [failstats.net](https://failstats.net) API. 
 

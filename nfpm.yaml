@@ -1,24 +1,44 @@
 # nfpm example config file
 name: "failstats"
+
 arch: "{arch}"
+
 platform: "linux"
+
 version: "{version}"
+
 section: "default"
+
 priority: "extra"
+
 replaces:
 - failstats
+
 provides:
 - failstats
+
 maintainer: "EngieDev admin@engiedev.net"
+
 description:  Reports fail2ban statistics to failstats.net
+
 vendor: "EngieDev"
+
 homepage: "https://failstats.net"
+
 license: "MIT"
-files:
-  ./builds/linux/{arch}/failstats: "/usr/local/bin/failstats"
-config_files:
-  ./failstats.conf: "/etc/failstats.conf"
-  ./failstats.service: "/etc/systemd/system/failstats.service"
+
+contents:
+  - src: ./builds/linux/{arch}/failstats
+    dst: /usr/local/bin/failstats
+
+  - src: ./failstats.conf
+    dst: /etc/failstats.conf
+    type: config
+  
+  - src: ./failstats.service
+    dst: /etc/systemd/system/failstats.service
+    type: config
+
 overrides:
   rpm:
     scripts:

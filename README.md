@@ -14,11 +14,11 @@ To submit data to the API, an API key is required. To obtain one, make an accoun
 Signed failstats packages are hosted at [engiedev.net](https://engiedev.net).
 
 ### apt based systems:
-- ``curl -s https://engiedev.net/release-key | sudo apt-key add``
+- ``curl -s  https://software.engiedev.net/release-key.pgp | sudo apt-key add``
 
-- For Ubuntu based systems: ``add-apt-repository "deb https://apt.engiedev.net ubuntu main"``
+- For Ubuntu based systems: ``add-apt-repository "deb https://software.engiedev.net/apt/ubuntu/ ubuntu main"``
 
-- For Debian based systems: ``echo "deb https://apt.engiedev.net/ debian main" | sudo tee /etc/apt/sources.list.d/engiedev.list``
+- For Debian based systems: ``echo "deb https://software.engiedev.net/apt/debian debian main" | sudo tee /etc/apt/sources.list.d/engiedev-debian-generic.list``
 
 - ``sudo apt update``
 
@@ -27,9 +27,13 @@ Signed failstats packages are hosted at [engiedev.net](https://engiedev.net).
 ### rpm systems:
 The yum/dnf commands are interchangable.
 
-- ``rpm --import https://engiedev.net/rpm-release-key``
+- ``sudo rpm --import https://software.engiedev.net/release-key.pgp``
 
-- ``sudo yum-config-manager --add-repo https://rpm.engiedev.net/general/engiedev_general.repo``
+- ``sudo yum install yum-utils``
+
+- For Fedora systems: ``sudo yum-config-manager --add-repo https://software.engiedev.net/rpms/fedora/generic/engiedev-fedora-generic.repo``
+
+- For Centos (and presumably RHEL) systems: ``sudo yum-config-manager --add-repo https://software.engiedev.net/rpms/centos/generic/engiedev-centos-generic.repo``
 
 - ``sudo yum update``
 

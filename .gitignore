@@ -26,3 +26,9 @@
 
 golang-failstats
 coverage.html
+
+updateSoftwareRepo.sh
+nfpmActual.yaml
+builds/*
+pkg/*
+deploy/*
